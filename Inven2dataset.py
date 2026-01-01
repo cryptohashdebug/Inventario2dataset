@@ -254,7 +254,12 @@ def main():
     #conn.close()
 
 if __name__ == "__main__":
-    if len(sys.argv) != 1:
-        print("Uso: python script.py <ruta_fichero>")
-    else:
-        main()
+    if len(sys.argv) > 2:
+        print(f'Uso: {sys.argv[0]} [test]')
+        sys.exit(0)
+    if sys.argv[1] == 'test':
+        logging.debug(f'Ejecutando pruebas')
+        import doctest
+        doctest.testmod() # ejecuta automáticamente las pruebas integradas
+        sys.exit(0)
+    main()
