@@ -4,6 +4,7 @@ import sys
 import csv
 import sqlite3
 import logging
+import argparse
 
 def ListAreas(conexion):
     '''
@@ -57,47 +58,47 @@ def print_dic(dic: dict):
     
 def procesar_file( data: dict, dir: str = '.', filename: str =''):
     '''
-    Prossesa ficheros csv producidos por inventarios
+    Procesa ficheros csv producidos por inventarios
     '''
-    logging.info(f'prosesando el fichero: {filename}' )
+    logging.info(f'Procesando el fichero: {filename}' )
     
     ruta_fichero = os.path.join(dir, filename)    
     medios = []
     
-    # Procesando cabesera
+    # Procesando cabecera
     with open(ruta_fichero, newline='') as f:
         reader = csv.reader(f)
         linea = 1
-        colum = 0
+        columna = 0
         for row in reader:
-            colum = 0
+            columna = 0
             for campo in row:                
                 if campo == '': 
-                    colum += 1
+                    columna += 1
                     continue
                 if campo.strip().lower() == 'Empresa:'.lower() : 
-                    #print(f'Fila: {linea}, Columna: {colum}')
+                    #print(f'Fila: {linea}, Columna: {columna}')
                     #print(row)
-                    data['Empresa'] = row[colum + 1].strip()
+                    data['Empresa'] = row[columna + 1].strip()
                     break
                 if campo.strip().lower() == 'Centro de Costo:'.lower() : 
-                    data['Centro'] = row[colum + 1].strip()
+                    data['Centro'] = row[columna + 1].strip()
                     break
                 if campo.strip().lower() == 'Area de Responsabilidad:'.lower() :
-                    data['Area'] = row[colum+1].strip()
+                    data['Area'] = row[columna+1].strip()
                     break
                 if campo.strip().lower() == 'Tipo de Activo:'.lower() :
-                    data['Tipo'] = row[colum+1].strip()
+                    data['Tipo'] = row[columna+1].strip()
                     break
                 if 'Utiles y Herramientas'.lower() in campo.strip().lower():
                     data['Tipo'] = 'Utiles y Herramientas'
                 
-                colum += 1
+                columna += 1
             
             linea += 1
             data['Linea']= linea
             if ('Area' in data) and ('Tipo' in data): 
-                logging.info(f'Cabesera {data}')
+                logging.info(f'Cabecera {data}')
                 break
     
     # Procesando data tipo 'tangible'
@@ -110,7 +111,7 @@ def procesar_file( data: dict, dir: str = '.', filename: str =''):
                 if row[0] == '': continue
 
                 if row[0].strip()[1].isnumeric() and l >= Linea:
-                    logging.info(f'prosesando la fila {Linea + l}')
+                    logging.info(f'Procesando la fila {Linea + l}')
                     logging.info(f'--> {row}')
                     if '/' in row[0].strip(): continue
                     d ={'Codigo':row[0].strip(),
@@ -122,7 +123,7 @@ def procesar_file( data: dict, dir: str = '.', filename: str =''):
                 l +=1
     
     # Procesando datos tipos 'Utiles y Herramientas'
-    def get_data_UtilHerami(Linea: int = 0):
+    def get_data_Utiles_Heramientas(Linea: int = 0):
         with open(ruta_fichero, newline='') as f:
             reader = csv.reader(f)
             l = 0
@@ -174,7 +175,7 @@ def procesar_file( data: dict, dir: str = '.', filename: str =''):
         get_data_tangible(data['Linea'])
     
     if data['Tipo'] == 'Utiles y Herramientas':
-        get_data_UtilHerami(data['Linea'])
+        get_data_Utiles_Heramientas(data['Linea'])
         pass
     
     data['Medios']= medios
@@ -254,10 +255,11 @@ def main():
     #conn.close()
 
 if __name__ == "__main__":
-    if len(sys.argv) > 2:
-        print(f'Uso: {sys.argv[0]} [test]')
-        sys.exit(0)
-    if sys.argv[1] == 'test':
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--test", help="increase output-test")
+    args = parser.parse_args()
+    if args-test:
+        print('-test turned on')    
         logging.debug(f'Ejecutando pruebas')
         import doctest
         doctest.testmod() # ejecuta automáticamente las pruebas integradas
