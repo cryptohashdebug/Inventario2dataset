@@ -258,7 +258,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--test", help="increase output-test")
     args = parser.parse_args()
-    if args-test:
+    if args.test:
         print('-test turned on')    
         logging.debug(f'Ejecutando pruebas')
         import doctest
