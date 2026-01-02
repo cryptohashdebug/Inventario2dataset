@@ -42,7 +42,7 @@ def files_is_csv(dir: str = '.'):
     itera en la entrada y devuelve los ficheros csv
     '''
     for name in files_in_dir(dir):
-        if name.split('.')[1] == 'csv': yield name
+        if name.split('.')[-1] == 'csv': yield name
 
 def print_dic(dic: dict):
     '''
