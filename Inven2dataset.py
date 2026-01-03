@@ -198,10 +198,11 @@ def procesar_file( data: dict, dir: str = '.', filename: str =''):
     return data
 
 def savemedios(datos: dict = {}, filename: str = ''):
+    isnuevofile = not os.path.exists(filename)
     with open(filename, 'a', newline='') as csvfile:
         fieldnames = ['Codigo', 'Des', 'Area', 'FAlta', 'FActu']
         writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
-        writer.writeheader()
+        if isnuevofile : writer.writeheader()
         
         for medio in datos['Medios']:
             medio['Area'] = datos['Area']
@@ -209,10 +210,11 @@ def savemedios(datos: dict = {}, filename: str = ''):
             writer.writerow(medio)
     
 def saveutiles(datos: dict = {}, filename: str = ''):
+    isnuevofile = not os.path.exists(filename)
     with open(filename, 'a', newline='') as csvfile:
         fieldnames = ['Codigo', 'Des', 'Cantida', 'Area', 'Precio', 'Importe']
         writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
-        writer.writeheader()
+        if isnuevofile : writer.writeheader()
         
         for medio in datos['Medios']:
             medio['Area'] = datos['Area']
