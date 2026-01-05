@@ -4,7 +4,9 @@ import sys
 import csv
 import sqlite3
 import logging
+#import decimal
 import argparse
+from decimal import *
 
 def ListAreas(conexion):
     '''
@@ -82,7 +84,7 @@ def procesar_file( data: dict, dir: str = '.', filename: str =''):
     '''
     Procesa ficheros csv producidos por inventarios
     '''
-    logging.info(f'Procesando el fichero: {filename}' )
+    #logging.info(f'Procesando el fichero: {filename}' )
     
     ruta_fichero = os.path.join(dir, filename)    
     medios = []
@@ -93,6 +95,8 @@ def procesar_file( data: dict, dir: str = '.', filename: str =''):
     columna = 0
     fase = 0
     util ={}
+    cuantos = 0
+    importe = Decimal(0.0)
     
     # Procesando el fichero    
     with open(ruta_fichero, newline='') as f:
@@ -100,8 +104,8 @@ def procesar_file( data: dict, dir: str = '.', filename: str =''):
         
         # por cada linea
         for row in reader:
-            logging.info(f'Procesando la linea {linea}')
-            logging.info(f'--> {row}')
+            #logging.info(f'Procesando la linea {linea}')
+            #logging.info(f'--> {row}')
             
             # Procesando cabecera
             if not keys_in_dict(data, claves_verificar):
@@ -138,12 +142,16 @@ def procesar_file( data: dict, dir: str = '.', filename: str =''):
                 
             #if keys_in_dict(data, claves_verificar):
             else:
-                logging.info(f'Cabecera completa, empezamos con el cuerpo')
-                # Procesando data tipo 'tangible'
+                #logging.info(f'Cabecera completa, empezamos con el cuerpo')
+                # Procesando data tipo 'Activos'
                 if data['Tipo'] == '1 - Tangible':            
-                    logging.debug(f'Procesando data tipo "Activos"')
+                    #logging.debug(f'Procesando data tipo "Activos"')
+                    if (row[0] == '') and (row[1].strip() == 'Total de Activos:'):
+                        data['Cuantos_f'] = int(row[2].strip())
+                        data['Importe_f'] = Decimal(row[4].strip().replace(',', '.'))
+                        continue
                     if row[0] == '':
-                        logging.info(f'Linea vacía, pasamos a la siguiente')
+                        #logging.info(f'Linea vacía, pasamos a la siguiente')
                         linea += 1
                         continue
                     if row[0].strip()[1].isnumeric() :                        
@@ -153,22 +161,31 @@ def procesar_file( data: dict, dir: str = '.', filename: str =''):
                              'FAlta':row[8].strip(),
                              'FActu':row[9].strip()}
                         medios.append(d)
-                        logging.info(f'Datos Resultado {d}')
+                        #logging.info(f'Datos Resultado {d}')
+                        cuantos += 1
+                        valor = row[2].strip().replace(',', '.')
+                        convercion = Decimal(valor)
+                        importe += convercion
+                        mensaje = f"Linea {linea}, Iten: {cuantos}, valor: {valor}"
+                        mensaje +=f", convercion: {convercion}"
+                        #logging.debug(f"{mensaje}")
 
                 # Procesando datos tipos 'Utiles'
                 if data['Tipo'] == 'Utiles':
-                    logging.debug(f'Procesando data tipo "Útiles", linea {linea}' )
+                    #logging.debug(f'Procesando data tipo "Útiles", linea {linea}' )
                     if (fase == 3) and (linea >=13):
-                        logging.info(f'Face: {fase}, guardamos y pasamos el siguiente')
+                        #logging.info(f'Face: {fase}, guardamos y pasamos el siguiente')
                         if util['Codigo'] != '' :medios.append(util)                    
                         util = {}
                         #print(medios)                    
                         fase = 0
                         linea += 1
+                        if row[2].strip() != '': cuantos += int(row[2].strip())
+                        if row[2].strip() != '': importe += Decimal(row[3].strip().replace(',', '.'))
                         continue
                     
                     if (fase == 2) and (linea >=13):
-                        logging.info(f'Face: {fase}, obtenemos el resto de la info')
+                        #logging.info(f'Face: {fase}, obtenemos el resto de la info')
                         util['Cantida'] = row[2].strip()
                         util['Precio'] = row[3].strip()
                         util['Importe'] = row[4].strip()                    
@@ -177,15 +194,18 @@ def procesar_file( data: dict, dir: str = '.', filename: str =''):
                         continue
                     
                     if (fase == 1) and (linea >=13):
-                        logging.info(f'Face: {fase}, Contiene código y descripción')
+                        #logging.info(f'Face: {fase}, Contiene código y descripción')
                         util['Codigo'] = row[0].strip()
                         util['Des'] = row[1].strip()                    
                         fase += 1
                         linea += 1
+                        if row[1].strip() == 'Total:' :
+                            data['Cuantos_f'] = int(row[2].strip())
+                            data['Importe_f'] = Decimal(row[3].strip().replace(',', '.'))
                         continue
                     
                     if (fase == 0) and (linea >=13):
-                        logging.info(f'Face: {fase}, linea se supone vacía')
+                        #logging.info(f'Face: {fase}, linea se supone vacía')
                         fase += 1
                         linea += 1
                         continue
@@ -193,8 +213,10 @@ def procesar_file( data: dict, dir: str = '.', filename: str =''):
             linea += 1
             data['Linea']= linea
     
-    logging.info(f'Terminamos en fichero -----')
-    data['Medios']= medios    
+    #logging.info(f'Terminamos en fichero ----- {filename}')
+    data['Medios']= medios
+    data['Cuantos_c'] = cuantos
+    data['Importe_c'] = importe
     return data
 
 def savemedios(datos: dict = {}, filename: str = ''):
@@ -261,13 +283,23 @@ def main():
     for filename in files_is_csv(wd):
         datos = {} # Almacen para los datos obtenidos        
         procesar_file(datos, wd, filename)
+        
+        logging.debug(f'Fichero {filename}')
+        
+        if (datos['Cuantos_f'] == datos['Cuantos_c']) and (datos['Importe_f'] == datos['Importe_c']):
+            # Guardondo los datos segun el tipo en ficheros apropiados
+            if datos['Tipo'] == '1 - Tangible':
+                savemedios(datos, filenamemedios)
+
+            if datos['Tipo'] == 'Utiles':
+                saveutiles(datos, filenameutiles)    
+            
+            logging.info(f'Fichero {filename}, validado')
+        else:
+            logging.debug(f"cuantos en file: {datos['Cuantos_f']} valor en file: {datos['Importe_f']}")
+            logging.debug(f"cuantos calculado: {datos['Cuantos_c']} valor calculado: {datos['Importe_c']}") 
+            logging.debug(f'Fichero {filename}, No validado')
                 
-        # Guardondo los datos segun el tipo en ficheros apropiados
-        if datos['Tipo'] == '1 - Tangible':
-            savemedios(datos, filenamemedios)
-    
-        if datos['Tipo'] == 'Utiles':
-            saveutiles(datos, filenameutiles)    
     
     #conn.close()
 
