@@ -10,7 +10,7 @@ la aplicación examina todos los ficheros nombrados con el patron *.csv en el di
 La cabecera contiene campos útiles para las relaciones entre tablas de la db.
 
 ## Por haces
-*. Agregar identificación de los archivos, para que no se produzcan errores procesando ficheros que no tengan el formato adecuado.
-*. Pulir el sistema de login. de forma que un parámetro defina el nivel de registro
-*. Mejorar la función 'procesar_file', probablemente dividiéndola en partes mas pequeñas para claridad del código y facilitar las pruebas.
-*. Limpiar las características de acceso a db, ya que se decidió separar funcionalidades en dos partes, una herramienta  que construye el dataset y luego en el sitio de Djando se procesa el dataset. Esto facilita la interoperatividad ya que desde Django se puede trabajar con diferentes motores de db. También facilita la uniformidad porque en el sitio solo se trabajara con dataset, no importa de donde venga.
+- Agregar identificación de los archivos, para que no se produzcan errores procesando ficheros que no tengan el formato adecuado.
+- Pulir el sistema de login. de forma que un parámetro defina el nivel de registro
+- Mejorar la función 'procesar_file', probablemente dividiéndola en partes mas pequeñas para claridad del código y facilitar las pruebas.
+- Limpiar las características de acceso a db, ya que se decidió separar funcionalidades en dos partes, una herramienta  que construye el dataset y luego en el sitio de Djando se procesa el dataset. Esto facilita la interoperatividad ya que desde Django se puede trabajar con diferentes motores de db. También facilita la uniformidad porque en el sitio solo se trabajara con dataset, no importa de donde venga.
